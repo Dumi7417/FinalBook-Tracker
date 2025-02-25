@@ -7,7 +7,13 @@ const protect = async (req, res, next) => {
   if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
     try {
       token = req.headers.authorization.split(" ")[1];
+
+      console.log("Полученный токен:", token);  // 🔥 Логируем токен
+
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+      console.log("Расшифрованный токен:", decoded); // 🔥 Логируем данные из токена
+
       req.user = await User.findById(decoded.id).select("-password");
 
       if (!req.user) {
@@ -16,25 +22,28 @@ const protect = async (req, res, next) => {
 
       next();
     } catch (error) {
-      res.status(401).json({ message: "Недействительный токен" });
+      console.error("Ошибка проверки токена:", error.message);
+      return res.status(401).json({ message: "Недействительный токен" });
     }
   } else {
-    res.status(401).json({ message: "Токен отсутствует" });
+    return res.status(401).json({ message: "Токен отсутствует" });
   }
 };
 
-// Универсальная проверка ролей
+
+// Универсальная проверка ролей (исправленная)
 const checkRole = (role) => {
   return (req, res, next) => {
-    if (!req.user || !req.user.role) {
-      return res.status(403).json({ message: "Доступ запрещен. Роль не установлена" });
+    if (!req.user) {
+      return res.status(403).json({ message: "Доступ запрещен. Пользователь не найден" });
     }
 
-    if (req.user.role === role) {
-      next();
-    } else {
-      res.status(403).json({ message: `Доступ запрещен. Требуется роль: ${role}` });
+    // Проверяем флаг isAdmin, а не req.user.role
+    if (role === "admin" && req.user.isAdmin) {
+      return next();
     }
+
+    return res.status(403).json({ message: `Доступ запрещен. Требуется роль: ${role}` });
   };
 };
 

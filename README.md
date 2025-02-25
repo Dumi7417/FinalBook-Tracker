@@ -4,6 +4,8 @@
 
 Book Tracker is a RESTful API that allows users to register, log in, and manage their book collection. Users can add books, update book details, delete books, and retrieve their book lists. The project implements authentication using JWT and enforces Role-Based Access Control (RBAC) to differentiate between regular users and admins.
 
+Additionally, the project includes an interactive HTML page where users can make API requests directly through a user-friendly interface.
+
 ## Technologies Used
 
 - Node.js
@@ -11,6 +13,7 @@ Book Tracker is a RESTful API that allows users to register, log in, and manage 
 - MongoDB (Mongoose)
 - JWT (JSON Web Token) for authentication
 - bcrypt for password hashing
+- HTML, CSS, JavaScript (for the frontend API testing page)
 
 ## Setup Instructions
 
@@ -42,6 +45,14 @@ Ensure you have the following installed:
    ```sh
    npm start
    ```
+
+### Running the Frontend API Testing Page
+
+An HTML page is included to allow users to send API requests from a simple web interface.
+
+1. Start the server as described above.
+2. Open `public/index.html` in a web browser.
+3. Use the form inputs to register, log in, and interact with the API.
 
 ## API Documentation
 
@@ -155,6 +166,8 @@ book-tracker/
 │   │   ├── bookRoutes.js
 │   ├── config/
 │   │   ├── db.js
+│   ├── public/
+│   │   ├── index.html  # API testing page
 │── .env
 │── package.json
 │── README.md
@@ -162,7 +175,7 @@ book-tracker/
 
 ## Authors & Contributions
 
-This project was developed as part of a final assignment. Each team member contributed to different aspects, including backend logic, authentication, and database management.
+This project was developed as part of a final assignment. Each team member contributed to different aspects, including backend logic, authentication, database management, and frontend API interaction.
 
 ## License
 

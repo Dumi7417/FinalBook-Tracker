@@ -11,6 +11,13 @@ const generateToken = (user) => {
   );
 };
 
+// Тестируем функцию генерации токена (используем фейковые данные)
+const testUser = { _id: "1234567890", isAdmin: false };
+const token = generateToken(testUser); // ✅ Теперь мы вызываем функцию
+
+console.log("Сгенерированный токен:", token); // ✅ Теперь выведется сам токен
+console.log("JWT_SECRET из .env:", process.env.JWT_SECRET); // ✅ Секрет
+
 // Регистрация пользователя
 const register = async (req, res) => {
   const { username, email, password } = req.body;

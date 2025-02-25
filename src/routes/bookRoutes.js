@@ -1,32 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const { protect, checkRole } = require('../middleware/authMiddleware');
-const adminOnly = checkRole("admin"); // Создаем adminOnly с помощью checkRole
+const adminOnly = checkRole("admin");
+const { getBooks, addBook, updateBook, deleteBook } = require('../controllers/bookController');
 
-// Импортируем контроллеры
-const controllers = require('../controllers/bookController');
-
-console.log('Контроллеры:', controllers); // Логируем, что импортируется
-
-// Деструктурируем функции
-const { getBooks, addBook, updateBook, deleteBook } = controllers;
-
-// Проверяем, что функции определены
-console.log('getBooks:', getBooks);
-console.log('addBook:', addBook);
-console.log('updateBook:', updateBook);
-console.log('deleteBook:', deleteBook);
-
-// Получить все книги (доступно всем)
 router.get('/', getBooks);
-
-// Добавить книгу (только администратор)
-router.post('/', protect, adminOnly, addBook);
-
-// Обновить книгу (только администратор)
+router.post('/', protect, adminOnly, (req, res, next) => {
+    console.log("Запрос на добавление книги:", req.body);
+    next();
+}, addBook);
 router.put('/:id', protect, adminOnly, updateBook);
-
-// Удалить книгу (только администратор)
 router.delete('/:id', protect, adminOnly, deleteBook);
 
 module.exports = router;

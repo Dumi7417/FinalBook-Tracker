@@ -2,10 +2,12 @@ require('dotenv').config(); // ✅ Загружаем переменные ок�
 
 const express = require('express');
 const mongoose = require('mongoose');
+const cors = require('cors'); // 📌 Подключаем CORS
 const authRoutes = require('./routes/authRoutes');
 const bookRoutes = require('./routes/bookRoutes');
 const userRoutes = require("./routes/userRoutes");
 const connectDB = require("./config/db"); // Подключение к MongoDB
+
 console.log("MONGODB_URI:", process.env.MONGODB_URI);
 connectDB();
 
@@ -13,13 +15,19 @@ console.log("Значение JWT_SECRET из .env:", process.env.JWT_SECRET);
 
 const app = express();
 app.use(express.json());
+app.use(cors({
+    origin: 'http://127.0.0.1:5500', // ✅ Разрешаем запросы с твоего фронтенда
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Разрешенные методы
+    allowedHeaders: ['Content-Type', 'Authorization'] // Разрешенные заголовки
+}));
 
 // Подключаем маршруты
+console.log("Подключение маршрута: /api/auth");
 app.use('/api/auth', authRoutes);
+console.log("Подключение маршрута: /api/books");
 app.use('/api/books', bookRoutes);
-console.log("Маршрут /api/users подключается...");
-app.use("/api/users", userRoutes); // ✅ Здесь должны подключаться маршруты пользователей
-console.log("Маршрут /api/users подключен");
+console.log("Подключение маршрута: /api/users");
+app.use("/api/users", userRoutes);
 
 // Логируем, что маршруты загружены
 console.log("Маршруты загружены: /api/auth, /api/books, /api/users");

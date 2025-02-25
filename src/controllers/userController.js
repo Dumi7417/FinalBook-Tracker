@@ -4,14 +4,18 @@ const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 require("dotenv").config();
 
-// Регистрация пользователя
+// Генерация JWT токена
+const generateToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "30d" });
+};
+
 // Регистрация пользователя
 const registerUser = async (req, res) => {
   try {
-    console.log("📩 Получен запрос на регистрацию:", req.body); // Логируем входящие данные
+    console.log("📩 Получен запрос на регистрацию:", req.body);
 
-    const { username, email, password, role } = req.body; 
-    const userRole = role || "user"; // Роль по умолчанию - "user"
+    const { username, email, password, role } = req.body;
+    const userRole = role || "user";
 
     if (!username || !email || !password) {
       console.log("❌ Ошибка: Одно из полей пустое");
@@ -31,13 +35,25 @@ const registerUser = async (req, res) => {
       username,
       email,
       password: hashedPassword,
-      role: userRole, 
+      role: userRole,
     });
 
     await user.save();
     console.log("🎉 Создан пользователь:", user);
 
-    res.status(201).json({ message: "Регистрация успешна!" });
+    // Генерация JWT-токена без вызова generateToken
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "30d" });
+
+    console.log("✅ Токен создан:", token);
+
+    res.status(201).json({
+      id: user._id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      token,
+    });
+
   } catch (error) {
     console.error("🔥 Ошибка сервера:", error);
     res.status(500).json({ message: "Ошибка сервера" });
@@ -45,11 +61,10 @@ const registerUser = async (req, res) => {
 };
 
 
-
 // Авторизация пользователя (логин)
 const loginUser = async (req, res) => {
   console.log("Логин вызван");
-  
+
   try {
     console.log("Запрос на логин:", req.body);
 
@@ -71,9 +86,7 @@ const loginUser = async (req, res) => {
 
     // Сравниваем пароли
     const isMatch = await bcrypt.compare(password, user.password);
-    
-    
-    
+
     console.log("🛠 Результат сравнения паролей:", isMatch);
 
     if (!isMatch) {
@@ -83,7 +96,7 @@ const loginUser = async (req, res) => {
 
     console.log("✅ Пароль верный, создаем токен...");
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "30d" });
+    const token = generateToken(user._id);
 
     console.log("✅ Токен создан:", token);
 
@@ -91,16 +104,14 @@ const loginUser = async (req, res) => {
       id: user._id,
       username: user.username,
       email: user.email,
-      role: user.role,  // Добавляем роль
+      role: user.role,
       token,
     });
-    
   } catch (error) {
     console.error("❌ Ошибка сервера:", error);
     res.status(500).json({ message: "Ошибка сервера" });
   }
 };
-
 
 // Получение профиля пользователя
 const getUserProfile = async (req, res) => {
@@ -111,6 +122,7 @@ const getUserProfile = async (req, res) => {
 
     const user = await User.findById(req.user.id).select("-password");
     if (!user) return res.status(404).json({ message: "Пользователь не найден" });
+
     res.json(user);
   } catch (error) {
     console.error(error);
@@ -149,5 +161,7 @@ const updateUserProfile = async (req, res) => {
     res.status(500).json({ message: "Ошибка сервера" });
   }
 };
+
 console.log("Экспортируем:", { registerUser, loginUser, getUserProfile, updateUserProfile });
+
 module.exports = { registerUser, loginUser, getUserProfile, updateUserProfile };

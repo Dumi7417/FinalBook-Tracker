@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Interface</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        input, button { margin: 5px; padding: 8px; }
+        #response { margin-top: 20px; white-space: pre-wrap; text-align: left; }
+    </style>
+</head>
+<body>
+    <h2>API Web Interface</h2>
+    
+    <h3>Register</h3>
+    <input type="text" id="regUsername" placeholder="Username">
+    <input type="email" id="regEmail" placeholder="Email">
+    <input type="password" id="regPassword" placeholder="Password">
+    <button onclick="registerUser()">Register</button>
+    
+    <h3>Login</h3>
+    <input type="text" id="loginUsername" placeholder="Username">
+    <input type="password" id="loginPassword" placeholder="Password">
+    <button onclick="loginUser()">Login</button>
+    <h3>Logout</h3>
+    <button onclick="logoutUser()">Logout</button>
+
+    <h3>Get Resources</h3>
+    <button onclick="getResources()">Fetch Resources</button>
+    
+    <h3>Create Resource</h3>
+    <input type="text" id="resourceTitle" placeholder="Title">
+    <input type="text" id="resourceAuthor" placeholder="Author">
+    <input type="text" id="resourceDescription" placeholder="Description">
+    <button onclick="createResource()">Create</button>
+    
+    <h3>Response</h3>
+    <div id="response"></div>
+    
+    <script>
+        let token = '';
+
+        async function registerUser() {
+            try {
+                const response = await fetch('http://localhost:5002/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: document.getElementById('regUsername').value,
+                        email: document.getElementById('regEmail').value,
+                        password: document.getElementById('regPassword').value
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('Регистрация успешна! 🎉');
+                    console.log('Успешная регистрация:', data);
+                } else {
+                    alert(`Ошибка регистрации: ${data.message || 'Не удалось зарегистрироваться'}`);
+                }
+            } catch (error) {
+                console.error('Ошибка запроса:', error);
+                alert('Ошибка подключения к серверу');
+            }
+        }
+
+        async function loginUser() {
+            try {
+                const response = await fetch('http://localhost:5002/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: document.getElementById('loginUsername').value, 
+                        password: document.getElementById('loginPassword').value
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    token = data.token;
+                    localStorage.setItem("token", token); // Сохраняем токен в localStorage
+                    console.log("Токен получен и сохранён:", token);
+                    alert('Вход выполнен успешно! 🔑');
+                } else {
+                    alert(`Ошибка входа: ${data.message || 'Неправильные данные'}`);
+                }
+            } catch (error) {
+                console.error('Ошибка входа:', error);
+                alert('Ошибка подключения к серверу');
+            }
+        }
+
+
+        async function getResources() {
+            try {
+                const response = await fetch('http://localhost:5002/api/books', {
+                    method: 'GET',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('response').innerText = JSON.stringify(data, null, 2);
+                } else {
+                    alert(`Ошибка загрузки данных: ${data.message || 'Не удалось получить данные'}`);
+                }
+            } catch (error) {
+                console.error('Ошибка получения данных:', error);
+                alert('Ошибка подключения к серверу');
+            }
+        }
+
+        async function createResource() {
+            const data = {
+                title: document.getElementById("resourceTitle").value.trim(),
+                author: document.getElementById("resourceAuthor").value.trim(),
+                description: document.getElementById("resourceDescription").value.trim() 
+            };
+
+            console.log("Отправляемые данные:", data);
+
+            if (!data.title || !data.author || !data.description) {
+                alert("Ошибка: Все поля обязательны!");
+                return;
+            }
+
+            const token = localStorage.getItem("token"); // Получаем токен из localStorage
+            if (!token) {
+                alert("Ошибка: Вы не авторизованы!");
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:5002/api/books', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token // Передаём токен правильно
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const responseData = await response.json();
+                console.log("Ответ от сервера:", responseData);
+
+                if (response.ok) {
+                    alert(`✅ Книга "${responseData.title}" успешно добавлена! 📖`);
+                    document.getElementById('response').innerText = JSON.stringify(responseData, null, 2);
+                } else {
+                    alert(`Ошибка создания: ${responseData.message || 'Не удалось создать ресурс'}`);
+                }
+            } catch (error) {
+                console.error('Ошибка создания ресурса:', error);
+                alert('Ошибка подключения к серверу');
+            }
+        }
+
+
+
+
+        function logoutUser() {
+            token = ''; // Очищаем токен
+            document.getElementById('response').innerText = "Вы вышли из аккаунта! 🔓";
+    
+            // Очистка полей ввода
+            document.getElementById('loginUsername').value = '';
+            document.getElementById('loginPassword').value = '';
+        }
+    </script>
+</body>
+</html>
